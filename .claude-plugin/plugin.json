@@ -1,7 +1,7 @@
 {
   "name": "context-guard-bot",
-  "version": "0.2.0",
-  "description": "A permanent, slim context-usage bar above the prompt with an animated sparkle; green under 20%, amber 20-30%, red past 30%, with a fun line per tier",
+  "version": "0.3.0",
+  "description": "A permanent, slim context-usage bar above the prompt with a chomping Pac-Man; green under 20%, amber 20-30%, red past 30%, munching faster each zone, with a fun line per tier",
   "author": { "name": "Ryan Norman" },
   "types": "./types/index.d.ts"
 }

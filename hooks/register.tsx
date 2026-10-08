@@ -40,14 +40,33 @@ const usageAtom = atom(
   { tokens: 0, percent: 0, tier: 'ok', message: pickPhrase('ok') } as ContextUsage
 )
 
-// A four-point sparkle, not Anthropic's literal mark (no asset to draw from
-// here) — a generic "AI" glyph in the same family, recoloured by tier. One
-// fixed slow duration for everyone: varying it by tier changed the element's
-// source string on every escalation, which restarted (and stuttered) the
-// spin; now it only remounts on an actual tier change, otherwise it just
-// spins, smoothly, forever.
-function sparkleSvg(color: string) {
-  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2c0 4.2 1 6.8 2.6 8.4C16.2 12 18.8 13 23 13c-4.2 0-6.8 1-8.4 2.6C13 17.2 12 19.8 12 24c0-4.2-1-6.8-2.6-8.4C7.8 14 5.2 13 1 13c4.2 0 6.8-1 8.4-2.6C11 8.8 12 6.2 12 2z" fill="${color}"><animateTransform attributeName="transform" type="rotate" from="0 12 13" to="360 12 13" dur="9s" calcMode="linear" repeatCount="indefinite"/></path></svg>`
+// One fixed chomp speed per tier, not a continuous function of percent:
+// percent changes far more often than the tier does, and tying the SVG's
+// source string to a fast-changing value is exactly what made the sparkle
+// stutter before (it remounted, and restarted, on every tick). The mouth only
+// speeds up on a real zone crossing, same as the colour already does.
+const TIER_CHOMP_SECONDS: Record<ContextTier, number> = { ok: 1.1, warn: 0.65, danger: 0.35 }
+
+function arcPoint(angleDeg: number): [number, number] {
+  const rad = (angleDeg * Math.PI) / 180
+  return [12 + 10 * Math.cos(rad), 12 + 10 * Math.sin(rad)]
+}
+
+// A pie with a wedge missing for the mouth, half-angle `theta` degrees either
+// side of due right; the missing wedge is always under 180°, so `largeArc`
+// (the big remaining arc, the body) stays 1 at both keyframes below and the
+// two paths interpolate as plain numbers, not a shape SMIL has to guess at.
+function pacPath(theta: number): string {
+  const [x1, y1] = arcPoint(-theta)
+  const [x2, y2] = arcPoint(theta)
+  return `M12,12 L${x1.toFixed(2)},${y1.toFixed(2)} A10,10 0 1 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`
+}
+
+const PAC_CLOSED = pacPath(2)
+const PAC_OPEN = pacPath(35)
+
+function pacmanSvg(color: string, chompSeconds: number) {
+  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="${PAC_OPEN}" fill="${color}"><animate attributeName="d" values="${PAC_OPEN};${PAC_CLOSED};${PAC_OPEN}" dur="${chompSeconds}s" calcMode="linear" repeatCount="indefinite"/></path></svg>`
 }
 
 export const register: Register = on => {
@@ -95,9 +114,9 @@ export const register: Register = on => {
     const color = TIER_HEX[usage.tier]
 
     const icon = Svg ? (
-      <Svg source={sparkleSvg(color)} alt="Claude" width={13} height={13} isInteractive />
+      <Svg source={pacmanSvg(color, TIER_CHOMP_SECONDS[usage.tier])} alt="Pac-Man" width={13} height={13} isInteractive />
     ) : (
-      <Text color={color} bold>✦</Text>
+      <Text color={color} bold>C</Text>
     )
 
     return (
