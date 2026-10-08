@@ -52,21 +52,24 @@ function arcPoint(angleDeg: number): [number, number] {
   return [12 + 10 * Math.cos(rad), 12 + 10 * Math.sin(rad)]
 }
 
-// A pie with a wedge missing for the mouth, half-angle `theta` degrees either
-// side of due right; the missing wedge is always under 180°, so `largeArc`
-// (the big remaining arc, the body) stays 1 at both keyframes below and the
-// two paths interpolate as plain numbers, not a shape SMIL has to guess at.
+// A full circle (body) via two semicircle arcs — always unambiguous, no
+// large-arc-flag guessing — with a triangular mouth wedge as a second
+// subpath, cut from it by fill-rule="evenodd" rather than drawn as the body's
+// own missing arc: a wrong arc-direction guess last time filled the mouth
+// and left the body empty, the opposite of a pac-man.
+const CIRCLE = 'M2,12 A10,10 0 1,1 22,12 A10,10 0 1,1 2,12'
+
 function pacPath(theta: number): string {
   const [x1, y1] = arcPoint(-theta)
   const [x2, y2] = arcPoint(theta)
-  return `M12,12 L${x1.toFixed(2)},${y1.toFixed(2)} A10,10 0 1 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`
+  return `${CIRCLE} M12,12 L${x1.toFixed(2)},${y1.toFixed(2)} L${x2.toFixed(2)},${y2.toFixed(2)} Z`
 }
 
 const PAC_CLOSED = pacPath(2)
 const PAC_OPEN = pacPath(35)
 
 function pacmanSvg(color: string, chompSeconds: number) {
-  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="${PAC_OPEN}" fill="${color}"><animate attributeName="d" values="${PAC_OPEN};${PAC_CLOSED};${PAC_OPEN}" dur="${chompSeconds}s" calcMode="linear" repeatCount="indefinite"/></path></svg>`
+  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="${PAC_OPEN}" fill="${color}" fill-rule="evenodd"><animate attributeName="d" values="${PAC_OPEN};${PAC_CLOSED};${PAC_OPEN}" dur="${chompSeconds}s" calcMode="linear" repeatCount="indefinite"/></path></svg>`
 }
 
 export const register: Register = on => {
