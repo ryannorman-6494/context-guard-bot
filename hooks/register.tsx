@@ -53,16 +53,20 @@ function arcPoint(angleDeg: number): [number, number] {
 }
 
 // A full circle (body) via two semicircle arcs — always unambiguous, no
-// large-arc-flag guessing — with a triangular mouth wedge as a second
-// subpath, cut from it by fill-rule="evenodd" rather than drawn as the body's
-// own missing arc: a wrong arc-direction guess last time filled the mouth
-// and left the body empty, the opposite of a pac-man.
+// large-arc-flag guessing — with a mouth wedge cut from it by
+// fill-rule="evenodd" rather than drawn as the body's own missing arc: a
+// wrong arc-direction guess earlier filled the mouth and left the body empty.
 const CIRCLE = 'M2,12 A10,10 0 1,1 22,12 A10,10 0 1,1 2,12'
 
 function pacPath(theta: number): string {
   const [x1, y1] = arcPoint(-theta)
   const [x2, y2] = arcPoint(theta)
-  return `${CIRCLE} M12,12 L${x1.toFixed(2)},${y1.toFixed(2)} L${x2.toFixed(2)},${y2.toFixed(2)} Z`
+  // The mouth's outer edge follows the circle's own small arc between the two
+  // points (large-arc 0: theta is always under 90°, so the gap is under
+  // 180°), not a straight chord — a chord leaves a thin curved sliver of the
+  // circle (the segment between the chord and the rim) still coloured in.
+  const mouth = `M12,12 L${x1.toFixed(2)},${y1.toFixed(2)} A10,10 0 0 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`
+  return `${CIRCLE} ${mouth}`
 }
 
 const PAC_CLOSED = pacPath(2)
