@@ -1,0 +1,6 @@
+{
+  "name": "context-guard-bot",
+  "description": "A slim, permanent context-usage bar above the prompt, with an animated sparkle and a fun line per tier",
+  "owner": { "name": "Ryan Norman" },
+  "plugins": [{ "name": "context-guard-bot", "source": "./" }]
+}
