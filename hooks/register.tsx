@@ -52,28 +52,30 @@ function arcPoint(angleDeg: number): [number, number] {
   return [12 + 10 * Math.cos(rad), 12 + 10 * Math.sin(rad)]
 }
 
-// A full circle (body) via two semicircle arcs — always unambiguous, no
-// large-arc-flag guessing — with a mouth wedge cut from it by
-// fill-rule="evenodd" rather than drawn as the body's own missing arc: a
-// wrong arc-direction guess earlier filled the mouth and left the body empty.
-const CIRCLE = 'M2,12 A10,10 0 1,1 22,12 A10,10 0 1,1 2,12'
-
+// A single pie boundary, one continuous path, not a circle-plus-cutout: two
+// separately-drawn arcs that are only numerically the same circle leave a
+// hair's-width seam between them once you're down at a 13px icon — that was
+// the "tiny sliver still" left by the evenodd version. One arc, one curve,
+// nothing to seam against.
+//
+// From point1 (angle -theta) to point2 (angle +theta), the body is the long
+// way around (through 180°, not through the mouth gap) — large-arc-flag 1.
+// SVG's sweep-flag 1 means increasing angle, which on screen (y grows
+// downward) reads clockwise; the long way from -theta to +theta is
+// decreasing angle (through -90, -180, back up to +theta from the far side),
+// so sweep is 0, not the 1 guessed originally — that earlier guess is what
+// filled the mouth and left the body empty.
 function pacPath(theta: number): string {
   const [x1, y1] = arcPoint(-theta)
   const [x2, y2] = arcPoint(theta)
-  // The mouth's outer edge follows the circle's own small arc between the two
-  // points (large-arc 0: theta is always under 90°, so the gap is under
-  // 180°), not a straight chord — a chord leaves a thin curved sliver of the
-  // circle (the segment between the chord and the rim) still coloured in.
-  const mouth = `M12,12 L${x1.toFixed(2)},${y1.toFixed(2)} A10,10 0 0 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`
-  return `${CIRCLE} ${mouth}`
+  return `M12,12 L${x1.toFixed(2)},${y1.toFixed(2)} A10,10 0 1 0 ${x2.toFixed(2)},${y2.toFixed(2)} Z`
 }
 
 const PAC_CLOSED = pacPath(2)
 const PAC_OPEN = pacPath(35)
 
 function pacmanSvg(color: string, chompSeconds: number) {
-  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="${PAC_OPEN}" fill="${color}" fill-rule="evenodd"><animate attributeName="d" values="${PAC_OPEN};${PAC_CLOSED};${PAC_OPEN}" dur="${chompSeconds}s" calcMode="linear" repeatCount="indefinite"/></path></svg>`
+  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="${PAC_OPEN}" fill="${color}"><animate attributeName="d" values="${PAC_OPEN};${PAC_CLOSED};${PAC_OPEN}" dur="${chompSeconds}s" calcMode="linear" repeatCount="indefinite"/></path></svg>`
 }
 
 export const register: Register = on => {
