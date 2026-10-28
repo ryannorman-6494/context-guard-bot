@@ -16,9 +16,21 @@ const TIER_RANK: Record<ContextTier, number> = { ok: 0, warn: 1, danger: 2 }
 // be a ThemeKey). Amber, not the brownish amber-600 from the first pass.
 const TIER_HEX: Record<ContextTier, string> = { ok: '#16A34A', warn: '#F59E0B', danger: '#DC2626' }
 const TIER_PHRASES: Record<ContextTier, string[]> = {
-  ok: ['plenty of room', 'cruising', 'all good here', 'In the green zone'],
-  warn: ['getting cosy', 'climbing — keep an eye on it', 'snacking through tokens', 'Think about wrapping up'],
-  danger: ['burning tokens fast', "context's about to pop", 'living dangerously (and expensively)', 'time to bail — new session']
+  ok: [
+    "Fresh boots, full map. Let’s Xplor!",
+    "Plenty of trail ahead. Xplor away!",
+    "Compass charged, curiosity high. Time to Xplor."
+  ],
+  warn: [
+    "Halfway up the mountain. Still Xploring, slightly sweaty.",
+    "Snack break? The Xplorer is starting to puff.",
+    "Backpack’s getting heavy with all this Xploring."
+  ],
+  danger: [
+    "Base camp is calling. This Xplorer needs a nap.",
+    "Map’s full of scribbles. Time for a fresh one, Xplorer!",
+    "Too much Xploring, not enough oxygen. Head back to camp."
+  ]
 }
 
 function tierOf(percent: number): ContextTier {
@@ -73,6 +85,18 @@ function pacPath(theta: number): string {
 
 const PAC_CLOSED = pacPath(2)
 const PAC_OPEN = pacPath(35)
+
+// The bar is an SVG so it can be a few pixels tall: a Box is at least one text row high, and its border
+// adds more, which is what made the bar look thick. Static (no animation), so a re-draw per token is harmless.
+const BAR_HEIGHT_PX = 5
+const BAR_PX_PER_CELL = 8
+function barSvg(widthPx: number, percent: number, color: string) {
+  const h = BAR_HEIGHT_PX
+  const r = h / 2
+  const fillPx = percent > 0 ? Math.min(widthPx, Math.max(h, Math.round((percent / 100) * widthPx))) : 0
+  const fill = fillPx > 0 ? `<rect x="0" y="0" width="${fillPx}" height="${h}" rx="${r}" fill="${color}"/>` : ''
+  return `<svg viewBox="0 0 ${widthPx} ${h}" width="${widthPx}" height="${h}" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="0.5" width="${widthPx - 1}" height="${h - 1}" rx="${r}" fill="${TRACK_COLOR}" stroke="#D4D4D4"/>${fill}</svg>`
+}
 
 function pacmanSvg(color: string, chompSeconds: number) {
   return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="${PAC_OPEN}" fill="${color}"><animate attributeName="d" values="${PAC_OPEN};${PAC_CLOSED};${PAC_OPEN}" dur="${chompSeconds}s" calcMode="linear" repeatCount="indefinite"/></path></svg>`
@@ -131,21 +155,15 @@ export const register: Register = on => {
     return (
       <Box flexDirection="row" alignItems="center" gap={1} paddingX={1}>
         {icon}
-        <Box position="relative" width={trackWidth} height={1}>
-          <Box width={trackWidth} height={1} backgroundColor={TRACK_COLOR} borderStyle="round" borderColor="#D4D4D4" />
-          {filled > 0 && (
-            <Box
-              position="absolute"
-              top={0}
-              left={0}
-              width={filled}
-              height={1}
-              backgroundColor={color}
-              borderStyle="round"
-              borderColor={color}
-            />
-          )}
-        </Box>
+        {Svg ? (
+          <Svg source={barSvg(trackWidth * BAR_PX_PER_CELL, usage.percent, color)} alt={`Context used: ${Math.round(usage.percent)}%`} width={trackWidth * BAR_PX_PER_CELL} height={BAR_HEIGHT_PX} />
+        ) : (
+          // Terminal: no image leaf, so a one-row Box pair with no border (a border adds rows).
+          <Box position="relative" width={trackWidth} height={1}>
+            <Box width={trackWidth} height={1} backgroundColor={TRACK_COLOR} />
+            {filled > 0 && <Box position="absolute" top={0} left={0} width={filled} height={1} backgroundColor={color} />}
+          </Box>
+        )}
         <Text color={usage.tier === 'ok' ? undefined : color} dimColor={usage.tier === 'ok'} bold={usage.tier !== 'ok'}>
           {Math.round(usage.percent)}%
         </Text>

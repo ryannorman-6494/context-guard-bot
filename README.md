@@ -1,8 +1,8 @@
 # context-guard-bot
 
 A Claude Code mod: a slim, permanent context-usage bar above the prompt, with a
-small animated sparkle. Green under 20%, amber 20–30%, red past 30% — each
-tier has a few short phrases that rotate in. The tier only climbs during a
+chomping Pac-Man. Green under 20%, amber 20–30%, red past 30% — each
+tier has three Xplorer-themed phrases, one picked when the tier is entered. The tier only climbs during a
 session (never drops back down quietly) and resets on a new one.
 
 ## Install
