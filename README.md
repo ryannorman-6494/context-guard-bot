@@ -17,6 +17,22 @@ install runs from the CLI):
 Say `y` to add the marketplace, then pick the **user** scope (the default) so
 it loads in every project, not just the current one.
 
+## Updating
+
+Updates are published here by bumping `version` in `.claude-plugin/plugin.json`.
+A third-party marketplace does not refresh itself unless you turn that on, so
+either update by hand:
+
+```
+claude plugin marketplace update context-guard-bot
+claude plugin update context-guard-bot@context-guard-bot
+```
+
+or switch on auto-update for the marketplace once (in a `claude` session:
+`/plugin`, open **Marketplaces**, pick `context-guard-bot`, enable auto-update),
+after which new versions install themselves on the next start. Restart Claude
+Code after an update to load it.
+
 ## Develop
 
 This folder is the mod itself — edit `hooks/register.tsx` directly. To try

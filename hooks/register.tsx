@@ -88,7 +88,9 @@ const PAC_OPEN = pacPath(35)
 
 // The bar is an SVG so it can be a few pixels tall: a Box is at least one text row high, and its border
 // adds more, which is what made the bar look thick. Static (no animation), so a re-draw per token is harmless.
-const BAR_HEIGHT_PX = 5
+const BAR_HEIGHT_PX = 10
+// The bar is drawn at this share of the width it was first given (Ryan: 20% narrower).
+const BAR_WIDTH_SCALE = 0.8
 const BAR_PX_PER_CELL = 8
 function barSvg(widthPx: number, percent: number, color: string) {
   const h = BAR_HEIGHT_PX
@@ -142,7 +144,7 @@ export const register: Register = on => {
     // back to a plain glyph there instead of the animated mark.
     const Svg = 'Svg' in components ? components.Svg : undefined
 
-    const trackWidth = Math.max(12, Math.min(40, (e.props.bodyColumns ?? 60) - 26))
+    const trackWidth = Math.round(Math.max(12, Math.min(40, (e.props.bodyColumns ?? 60) - 26)) * BAR_WIDTH_SCALE)
     const filled = usage.percent > 0 ? Math.max(1, Math.round((usage.percent / 100) * trackWidth)) : 0
     const color = TIER_HEX[usage.tier]
 
